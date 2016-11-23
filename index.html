@@ -28,6 +28,7 @@
 	<script src="http://dygraphs.com/1.0.1/dygraph-combined.js"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
 	<script src="/assets/js/bootstrap-datepicker.js"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery.simpleWeather/3.1.0/jquery.simpleWeather.min.js"></script>
 
 	<!-- Main page functionality
   	================================================== -->
@@ -38,6 +39,27 @@
 
 	//main document ready function
 	$( document ).ready(function() {
+
+		$.simpleWeather({
+			location: 'Nassau, NY',
+			unit: 'F',
+			success: function (weather) {
+				html = '<h2>&nbsp;&nbsp;' + weather.temp + '&deg;' + weather.units.temp + '</h2><img style="float:left;" width="125px" src="' + weather.image + '">';
+				html += '<ul><li><i style="color:#000" class="icon-' + weather.code + '"></i>' + weather.city + ', ' + weather.region + '</li>';
+				html += '<li class="currently">' + weather.currently + '</li>';
+				html += '</ul>';
+				html += '<table class="table table-striped">';
+				for (var i = 0; i < 5; i++) {			
+					html += '<tr><td><img style="float:left;" width="50px" src="' + weather.forecast[i].image + '"></td><td>' + weather.forecast[i].day + '</td><td>' + weather.forecast[i].low + ' <strong>' + weather.forecast[i].high + '</strong></td></tr>';	
+				}
+				html += '</table>'
+
+				$("#weather").html(html);
+			},
+			error: function (error) {
+				$("#weather").html('<p>' + error + '</p>');
+			}
+		});
 		
 		//listener for graph dropdown menu
 		$('.dropdown-menu li a').on( 'click', function( event ) {
@@ -374,13 +396,13 @@
 					</table>
 				</div>
 			</div>
-			<div id="weatherDiv" class="col-sm-3 col-sm-offset-4 hidden-xs">
-				<div style="margin-top:10px;width: 240px;" class="panel panel-default">
+			<div class="col-sm-3">
+				<div style="margin-top:10px;" class="panel panel-default">
 					<div class="panel-heading">
-						<h4 class="panel-title">Weather</h4>
+						<h4 class="panel-title">Weather<small class="pull-right" style="margin-top:3px;" id="x300Time"></small></h4>
 					</div>
-		
-					<div style='width: 240px; height: 420px; background-image: url( http://vortex.accuweather.com/adcbin/netweather_v2/backgrounds/blue_240x420_bg.jpg ); background-repeat: no-repeat; background-color: #346797;' ><div id='NetweatherContainer' style='height: 405px;' ><script src='http://netweather.accuweather.com/adcbin/netweather_v2/netweatherV2ex.asp?partner=netweather&tStyle=whteYell&logo=1&zipcode=12123&lang=eng&size=12&theme=blue&metric=0&target=_self'></script></div><div style='text-align: center; font-family: arial, helvetica, verdana, sans-serif; font-size: 10px; line-height: 15px; color: #FFFFFF;' ><a style='font-size: 10px; color: #FFFFFF' href='http://www.accuweather.com/us/ny/nassau/12123/city-weather-forecast.asp?partner=accuweather' >Weather Forecast</a> | <a style='color: #FFFFFF' href='http://www.accuweather.com/maps-satellite.asp' >Weather Maps</a> | <a style='color: #FFFFFF' href='http://www.accuweather.com/index-radar.asp?partner=accuweather&zipcode=12123' >Weather Radar</a></div></div>
+	
+					<div id="weather"></div>
 				</div>
 			</div>
 		</div>
