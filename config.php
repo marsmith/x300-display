@@ -3,8 +3,8 @@
 
 //set mysql database stuff here
 $servername = "localhost";
-$username = "root";
-$password = "abc123";
+$username = "xxxxx";
+$password = "xxxxx";
 $dbname = "x300";
 
 //set misc variables here
