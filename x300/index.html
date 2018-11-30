@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<!--[if lt IE 7 ]><html class="ie ie6" lang="en"> <![endif]-->
+<!--[if IE 7 ]><html class="ie ie7" lang="en"> <![endif]-->
+<!--[if IE 8 ]><html class="ie ie8" lang="en"> <![endif]-->
+<!--[if (gte IE 9)|!(IE)]><!--><html lang="en"> <!--<![endif]-->
+<head>
+
+	<!-- Basic Page Needs
+	================================================== -->
+	<meta charset="utf-8">
+	<title>X-300</title>
+	<meta name="description" content="">
+	<meta name="author" content="">
+
+	<!-- Mobile Specific Metas
+	================================================== -->
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+	<!-- CSS
+	================================================== -->
+	<link rel="stylesheet" href="./assets/css/bootstrap.min.css"> 
+	<link rel="stylesheet" href="./assets/css/datepicker3.css"> 
+	<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
+
+	<!-- Imports
+  	================================================== -->
+	<script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>	
+	<script src="http://dygraphs.com/1.0.1/dygraph-combined.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+	<script src="./assets/js/bootstrap-datepicker.js"></script>
+	<script src="https://momentjs.com/downloads/moment.min.js"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery.simpleWeather/3.1.0/jquery.simpleWeather.min.js"></script>
+
+	<!-- Main page functionality
+  	================================================== -->
+	<script type="text/javascript">
+	
+	//set default query value as a global variable
+	var query = { "query" : "24 HOUR" };
+	var x300url = 'http://104.228.21.202:8080/'
+
+	//main document ready function
+	$( document ).ready(function() {
+
+		$.simpleWeather({
+			location: '12123',
+			unit: 'F',
+			success: function (weather) {
+				html = '<h2>&nbsp;&nbsp;' + weather.temp + '&deg;' + weather.units.temp + '</h2><img style="float:left;" width="125px" src="' + weather.image + '">';
+				html += '<ul><li><i style="color:#000" class="icon-' + weather.code + '"></i>' + weather.city + ', ' + weather.region + '</li>';
+				html += '<li class="currently">' + weather.currently + '</li>';
+				html += '</ul>';
+				html += '<table class="table table-striped">';
+				for (var i = 0; i < 5; i++) {			
+					html += '<tr><td><img style="float:left;" width="50px" src="' + weather.forecast[i].image + '"></td><td>' + weather.forecast[i].day + '</td><td>' + weather.forecast[i].low + ' <strong>' + weather.forecast[i].high + '</strong></td></tr>';	
+				}
+				html += '</table>'
+
+				$("#weather").html(html);
+			},
+			error: function (error) {
+				$("#weather").html('<p>' + error + '</p>');
+			}
+		});
+		
+		//listener for graph dropdown menu
+		$('.dropdown-menu li a').on( 'click', function( event ) {
+			var $target = $( event.currentTarget );	
+			$target.closest( '.btn-group' )
+			 .find( '[data-bind="label"]' ).addClass('active').attr('value',$target.attr('value')).text( $target.text() )
+				.end()
+			 .children( '.dropdown-toggle' ).dropdown( 'toggle' );
+			
+			//call getlog function when dropdown changes  
+			query.query = $target.attr('value');
+			getLog(query); 
+			return false;
+		});
+		
+		//listener for date query
+		$('#dateQueryButton').on('click',function() {
+			query.query = $('.datepicker').attr('value');
+			getLog(query);
+		});
+		
+		//setup datepicker dates
+		var startDate = new Date("2014-11-09T00:00:00");
+		var today =  new Date();
+		var yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);;
+		
+		//instantiate
+		$('.datepicker').datepicker({
+			format: 'yyyy-mm-dd',
+			autoclose: true,
+			todayHighlight: true,
+			startDate:  startDate,
+			endDate: today
+		})
+		
+		//set datepicker date to yesterday so it has a value
+		$(".datepicker").datepicker("update", yesterday);
+		
+		//get getLabels
+		getLabels();
+		
+		//run getState
+		getState();
+		
+		//keep running getState every 15 seconds
+		setInterval(function(){getState();}, 15000);
+
+	});
+	
+	function getLabels() {
+	
+		//only get label if needed
+		if (!getCookie("x300")) {
+			
+			var labelArray = [];
+
+			//get main page to find labels
+			$.get("/data",
+				function(data){
+					if(data){
+						var labels = $(data).find('tr')
+						$.each(labels, function() {
+							labelArray.push($(this).text())
+						});
+
+						//loop over label array, set localStorage
+						for(var i = 0; i < 12; i++) {
+							if (i == 0) {
+								setCookie("x300",labelArray[i],999)
+							}
+							else if (i > 0 && i < 9) {
+								setCookie("sensor" + i,labelArray[i],999)
+							}
+						}
+					}
+					else {
+						alert("Failed to get labels");
+					}
+					
+					//write labels to output table
+					for (i = 1; i < 9; i++) { 
+						$('#sensor' + i).html(getCookie("sensor" + i));
+					}
+					
+					//set page title
+					$('#pagetitle').text(getCookie("x300"));	
+						
+					//get initial log
+					getLog(query);
+				}
+			);
+		}
+		
+		//otherwise labels already exist
+		else {
+			//write labels to output table
+			for (i = 1; i < 9; i++) { 
+				$('#sensor' + i).html(getCookie("sensor" + i));
+			}
+			
+			//set page title
+			$('#pagetitle').text(getCookie("x300"));	
+			
+			
+			//get initial log
+			getLog(query);
+		}
+	}
+	
+	function getState() {
+	
+		//get log file
+		$.get("data/state.xml",
+			 function(logXmlDoc){
+				
+				if(logXmlDoc){					
+					//update the table values
+					var currentDate = new Date();
+					var offset = currentDate.getTimezoneOffset() / 60;
+					
+					//get state time   
+					var stateSeconds = $(logXmlDoc).find('time').text();   
+					var stateDate = new Date(stateSeconds * 1000);
+					var hours = stateDate.getHours();
+					stateDate.setHours(hours + offset);
+
+					//update the time
+					$('#x300Time').html(stateDate.toLocaleString());		
+				
+					// first get the units
+					var units = $(logXmlDoc).find('units').text();
+					
+					//update table values
+					for (i = 1; i < 9; i++) { 
+					
+						//name of current value
+						var tempLabelValue = "sensor" + i + "temp";
+						
+						//get new temperature value
+						var newTempValue = $(logXmlDoc).find(tempLabelValue).text();
+						
+						//set default mean value
+						var meanValue = 0;
+						
+						//check if we have an existing cookie
+						if (!getCookie(tempLabelValue)) {
+							
+							//if not cookie, create cookie with padded array of same values
+							var sensorHistoricalArray = Array.apply(null, new Array(5)).map(String.prototype.valueOf,newTempValue);
+							setCookie('sensor' + i + 'temp',sensorHistoricalArray.join('|'),7)
+							
+							meanValue = newTempValue;
+						}
+						
+						//if there is a cookie
+						else {
+						
+							//get cookie for temp values, convert back to array
+							var sensorHistoricalArray = getCookie(tempLabelValue).split('|');
+
+							//get mean value
+							var total = 0;
+							$.each(sensorHistoricalArray ,function() {
+								total += parseFloat(this);
+								
+							});
+							meanValue = total/sensorHistoricalArray.length;
+
+							//add new value to beginning of array
+							sensorHistoricalArray.unshift(newTempValue);
+							//remove last value
+							sensorHistoricalArray.pop();
+							
+							//console.log('sensorHistoricalArray for ',tempLabelValue ,': ',sensorHistoricalArray,'Mean value: ',meanValue);
+							
+							//set new cookie
+							setCookie('sensor' + i + 'temp',sensorHistoricalArray.join('|'),7)	
+						}
+					
+						//background color
+						if ((parseFloat(newTempValue) > 155) && (parseFloat(newTempValue) < 185)) {
+							//set to red
+							$("#sensor" + i + "temp").css('background-color', '#85C285');
+						}
+						else {
+							//set to green
+							if (!("sensor" + i + "temp" == 'sensor7temp' || "sensor" + i + "temp" == 'sensor8temp')) {
+								$("#sensor" + i + "temp").css('background-color', '#FFB2B2');
+							}
+						}
+						
+						//add values with arrows	
+						if (parseFloat(meanValue) > parseFloat(newTempValue)) {
+						$("#sensor" + i + "temp").html($(logXmlDoc).find("sensor" + i + "temp").text() + " &deg;" + units + '&nbsp;&nbsp<i class="fa fa-arrow-down" style="color:blue"></i>');
+						}
+						else {
+							$("#sensor" + i + "temp").html($(logXmlDoc).find("sensor" + i + "temp").text() + " &deg;" + units + '&nbsp;&nbsp<i class="fa fa-arrow-up" style="color:red"></i>');
+						}
+					}
+				}
+				else {
+					alert('Failed to load x300 data');
+				}
+			}
+		);	
+	}
+		
+	function getLog(queryValue) {
+		console.log('queryval',queryValue);
+	
+		//show what graph is being display in panel header
+		//$('#graphTime').html(query.split('=')[1]);
+		
+		//clear any existing graph
+		$('#graphdiv').html('');
+	
+		//show loader icon
+		$( ".ajax-loader" ).show();
+		
+		//create label array
+		var labelList = ["Log Time","Outside Temp",getCookie("sensor1"),getCookie("sensor2"),getCookie("sensor3"),getCookie("sensor4"),getCookie("sensor5"),getCookie("sensor6"),getCookie("sensor7"),getCookie("sensor8")];
+
+		//get log file cross domain using YQL
+		$.ajax({
+			type:"GET",
+			url:"/getlog",
+			data: queryValue,
+			success: function(data){
+				
+				//make sure mysql gave a good response
+				if(data.length > 0){
+
+					var json = data;
+					var fields = Object.keys(json[0])
+					var replacer = function(key, value) { return value === null ? '' : value } 
+					var csv = json.map(function(row){
+					return fields.map(function(fieldName){
+						return JSON.stringify(row[fieldName], replacer)
+					}).join(',')
+					})
+					//csv.unshift(fields.join(',')) // add header column
+
+					var newData = csv.join('\r\n');
+
+					//create graph
+					var graph = new Dygraph(
+						document.getElementById("graphdiv"),newData, { 
+						labels: labelList,
+						labelsDiv: document.getElementById("legendDiv"),
+						ylabel: 'Temperature (F)',
+						xlabel: 'Date',
+						xValueParser: function(x) { 
+							//for some reason need to remove quotes
+							var date = new Date(x.replace(/['"]+/g, ''));
+        					return date;
+						},
+						valueRange: [-20,230]
+						}         
+					  );
+					  
+					  //hide loader icon
+					  $( ".ajax-loader" ).hide();
+				} 
+				else {
+					$( ".ajax-loader" ).hide();
+					alert("Failed to load graph data from the database");
+				}
+			}
+		});
+	}
+	
+	function setCookie(name,value,days) {
+		if (days) {
+			var date = new Date();
+			date.setTime(date.getTime()+(days*24*60*60*1000));
+			var expires = "; expires="+date.toGMTString();
+		}
+		else var expires = "";
+		document.cookie = name+"="+value+expires+"; path=/";
+	}
+
+	function getCookie(name) {
+		var nameEQ = name + "=";
+		var ca = document.cookie.split(';');
+		for(var i=0;i < ca.length;i++) {
+			var c = ca[i];
+			while (c.charAt(0)==' ') c = c.substring(1,c.length);
+			if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+		}
+		return null;
+	}
+	
+	function deleteCookie(name) {
+		document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+	}
+
+	</script>
+
+	<style>
+	body {
+	  padding-top: 60px;
+	}
+	</style>
+</head>
+
+<body>
+
+	<!-- Bootstrap Navbar
+	================================================== -->
+	<div class="navbar navbar-default navbar-fixed-top">  
+	  <div class="container">
+		<div class="navbar-header">
+		  <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+		  </button>
+		  <a id="pagetitle" class="navbar-brand" href="#">X-300</a>
+		</div>
+		<div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="#tempPanel">Temps</a></li>
+            <li><a href="#graphPanel">Graph</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+	  </div>
+	</div>
+
+	<!-- Primary Page Layout
+	================================================== -->
+	<div class="container">
+		<div id="tempPanel" class="row">
+			<div class="col-sm-5">
+				<div style="margin-top:10px;" class="panel panel-default">
+					<div class="panel-heading">
+						<h4 class="panel-title">Current Temps<small class="pull-right" style="margin-top:3px;" id="x300Time"></small></h4>
+					</div>
+					<!-- This is the main data table -->  
+					<table class="table table-striped">			
+						<tr><td id="sensor1">Sensor 1</td><td id="sensor1temp" align="center"><i id="stateSpinner" class="fa fa-spinner fa-1x fa-spin"></i></td></tr>
+						<tr><td id="sensor2">Sensor 2</td><td id="sensor2temp" align="center"><i id="stateSpinner" class="fa fa-spinner fa-1x fa-spin"></i></td></tr>
+						<tr><td id="sensor3">Sensor 3</td><td id="sensor3temp" align="center"><i id="stateSpinner" class="fa fa-spinner fa-1x fa-spin"></i></td></tr>
+						<tr><td id="sensor4">Sensor 4</td><td id="sensor4temp" align="center"><i id="stateSpinner" class="fa fa-spinner fa-1x fa-spin"></i></td></tr>
+						<tr><td id="sensor5">Sensor 5</td><td id="sensor5temp" align="center"><i id="stateSpinner" class="fa fa-spinner fa-1x fa-spin"></i></td></tr>
+						<tr><td id="sensor6">Sensor 6</td><td id="sensor6temp" align="center"><i id="stateSpinner" class="fa fa-spinner fa-1x fa-spin"></i></td></tr>
+						<tr><td id="sensor7">Sensor 7</td><td id="sensor7temp" align="center"><i id="stateSpinner" class="fa fa-spinner fa-1x fa-spin"></i></td></tr>
+						<tr><td id="sensor8">Sensor 8</td><td id="sensor8temp" align="center"><i id="stateSpinner" class="fa fa-spinner fa-1x fa-spin"></i></td></tr>
+					</table>
+				</div>
+			</div>
+			<div class="col-sm-3">
+				<div style="margin-top:10px;" class="panel panel-default">
+					<div class="panel-heading">
+						<h4 class="panel-title">Weather<small class="pull-right" style="margin-top:3px;" id="x300Time"></small></h4>
+					</div>
+	
+					<div id="weather"></div>
+				</div>
+			</div>
+		</div>
+		<div id="graphPanel" class="row">
+			<div class="col-sm-12">
+				<div class="panel panel-default">
+				  <div class="panel-heading">
+					<h4 class="panel-title">Graph<small class="pull-right" style="margin-top:3px;" id="graphTime"></small></h4>
+					</div>
+					<div style="margin:5px;" class="row">
+						<div class="btn-group pull-left">
+							<button type="button" style="margin-right:5px;" class="btn btn-sm btn-default dropdown-toggle" data-toggle="dropdown">
+								<span id='logQuery' data-bind="label" value="24 HOUR">Last 24 Hours</span>&nbsp;<span class="caret"></span>
+							</button>		
+							<ul class="dropdown-menu" role="menu">
+								<li><a href="#" value="24 HOUR">Last 24 Hours</a></li>
+								<li><a href="#" value="12 HOUR">Last 12 Hours</a></li>
+								<li><a href="#" value="6 HOUR">Last 6 Hours</a></li>
+								<li><a href="#" value="4 HOUR">Last 4 Hours</a></li>
+								<li><a href="#" value="2 HOUR">Last 2 Hours</a></li>
+								<li><a href="#" value="1 HOUR">Last 1 Hour</a></li>
+							</ul>
+							<div class="input-group" style="width:150px;float:left;">
+							  <input type="button" class="input-sm form-control datepicker"></input>
+							  <span class="input-group-btn">
+								<button id="dateQueryButton" class="btn btn-sm btn-default" type="button">Load Day</button>
+							  </span>
+							</div><!-- /input-group -->
+						</div>
+						<div class="btn-group pull-right">
+							<button class="btn btn-sm btn-default" type="button" onclick="getLog(query)"><i class="fa fa-refresh"></i></button>
+						</div>	
+					</div>
+					
+					<img id="loader" src="loading.gif" style="display:none" class="ajax-loader"/>
+					<div id="graphdiv" style="width:100%;height:500px;"></div>
+					<div style="margin:5px;" class="row">
+						<div id="legendDiv"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div><!-- container -->
+
+<!-- End Document
+================================================== -->
+</body>
+</html>
