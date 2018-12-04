@@ -7,7 +7,6 @@ var weather = require('weather-js');
 
 var dbName = dbInfo.database.name;
 var x300tableName =  dbInfo.database.table;
-var daysToExpire = 999999999;
 //var x300url = 'http://localhost:8080/data/';
 var x300url = 'http://104.228.21.202:8080/';
 
@@ -82,21 +81,29 @@ var getLog = function() {
             console.log('requesting log:', x300url  + 'log.txt')
             getCSV(x300url  + 'log.txt', {headers: false})
                 .then(rows => {
+
+                    //remove first item (headers) from array
+                    rows.shift();
     
                     rows.forEach(function (value) {
                         var date = formatDate(new Date(value[0]));
                         console.log('processing log entry for:',date, value.join(','));
-                        //var data = [0,0,0,0,0,0,0,0,0];
                         var data = value;
     
                         var updateQuery = "INSERT INTO `" + x300tableName  + "` (logtime,temp,sensor1,sensor2,sensor3,sensor4,sensor5,sensor6,sensor7,sensor8) VALUES('" + date + "','" + currentOutsideTemp + "','" + data[1] + "','" + data[2] + "','" + data[3] + "','" + data[4] + "','" + data[5] + "','" + data[6] + "','" + data[7] + "','"+ data[8] + "') ON DUPLICATE KEY UPDATE logtime = '" + date + "'";
+
+                        //run query
                         connection.query(updateQuery);
+
                     });
                     connection.end();
+
+                
+                    //erase log
+                    getCSV(x300url  + 'log.txt?erase=1', {headers: false}).then(rows => console.log('erased log'));
             });
     
-            //erase log
-            //getCSV(x300url  + 'log.txt?erase=1', {headers: false}).then(rows => console.log('erased log'));
+
         });
     });
 }

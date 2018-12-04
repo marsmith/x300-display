@@ -8,8 +8,9 @@ var dbInfo     = require('./dbInfo.js');
 const url = require('url');
 
 // Constants
-var PORT = 8080;
+var PORT = 8083;
 var HOST = '0.0.0.0';
+var x300url = 'http://104.228.21.202:8080';
 
 //need parser to read POST requests
 app.use(bodyParser.urlencoded({extended: true}));
@@ -30,7 +31,8 @@ app.get('/', (req, res) => {
     res.sendFile('index.html');
 });
 
-app.use('/data', proxy('http://104.228.21.202:8080'));
+//proxy to get to x300 url
+app.use('/data', proxy(x300url));
 
 // Retrieve all juicefeed infos
 app.get('/getlog', function (req, res) {
