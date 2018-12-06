@@ -24,8 +24,9 @@
 
 	<!-- Imports
   	================================================== -->
-	<script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>	
-	<script src="http://dygraphs.com/1.0.1/dygraph-combined.js"></script>
+	<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>	
+	<script src="https://code.highcharts.com/highcharts.js"></script>
+	<script src="http://code.highcharts.com/modules/data.js"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
 	<script src="./assets/js/bootstrap-datepicker.js"></script>
 	<script src="https://momentjs.com/downloads/moment.min.js"></script>
@@ -295,36 +296,50 @@
 				//make sure mysql gave a good response
 				if(data.length > 0){
 
-					var json = data;
-					var fields = Object.keys(json[0])
-					var replacer = function(key, value) { return value === null ? '' : value } 
-					var csv = json.map(function(row){
-					return fields.map(function(fieldName){
-						return JSON.stringify(row[fieldName], replacer)
-					}).join(',')
-					})
-					//csv.unshift(fields.join(',')) // add header column
+					//crowbar in new csv headers
+					var newData = labelList.join(',') + '\n' + data;
 
-					var newData = csv.join('\r\n');
-
-					//create graph
-					var graph = new Dygraph(
-						document.getElementById("graphdiv"),newData, { 
-						labels: labelList,
-						labelsDiv: document.getElementById("legendDiv"),
-						ylabel: 'Temperature (F)',
-						xlabel: 'Date',
-						xValueParser: function(x) { 
-							//for some reason need to remove quotes
-							var date = new Date(x.replace(/['"]+/g, ''));
-        					return date;
+					$('#graphdiv').highcharts({
+						credits: {
+							enabled: false
 						},
-						valueRange: [-20,230]
-						}         
-					  );
+						chart: {
+							type: "line"
+						},
+						tooltip: {
+							shared: true
+						},
+						title:{
+							text:''
+						},
+						xAxis: {
+							type: 'datetime',
+							dateTimeLabelFormats: {
+							day: '%d %b %Y'    //ex- 01 Jan 2016
+							}
+						},
+						yAxis: {
+							title: {
+								text: "Temperature (F)"
+							}
+						},
+						data: {
+							csv: newData
+						},
+						plotOptions: {
+							series: {
+								marker: {
+									enabled: false
+								}
+							}
+						}
+					});
+
+					//hide series by default
+		
 					  
-					  //hide loader icon
-					  $( ".ajax-loader" ).hide();
+					//hide loader icon
+					$( ".ajax-loader" ).hide();
 				} 
 				else {
 					$( ".ajax-loader" ).hide();

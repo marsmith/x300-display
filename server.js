@@ -1,11 +1,10 @@
 var express    = require("express");
 var app        = express();
 var mysql      = require('mysql');
-var async      = require('async');
+var csv        = require('csv-express')
 var proxy      = require('express-http-proxy');
 var bodyParser = require("body-parser");
 var dbInfo     = require('./dbInfo.js');
-const url = require('url');
 
 // Constants
 var PORT = 8083;
@@ -58,7 +57,7 @@ app.get('/getlog', function (req, res) {
     connection.query(logQuery, function (error, results, fields) {
         if (error) throw error;
         //console.log('The response is: ', results);
-        res.json(results);
+        res.csv(results, false);
       });
 
     connection.end();
