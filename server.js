@@ -44,7 +44,7 @@ app.get('/getlog', function (req, res) {
     if (queryTerm.indexOf('HOUR') != -1) {
         logQuery += "> DATE_SUB(NOW(), INTERVAL " + queryTerm + ")";
     }
-    else if ($queryDate) {
+    else {
         logQuery += "LIKE '" + queryTerm + "%'";
     }
 
