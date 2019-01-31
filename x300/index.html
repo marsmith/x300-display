@@ -30,8 +30,7 @@
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
 	<script src="./assets/js/bootstrap-datepicker.js"></script>
 	<script src="https://momentjs.com/downloads/moment.min.js"></script>
-	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery.simpleWeather/3.1.0/jquery.simpleWeather.min.js"></script>
-
+	
 	<!-- Main page functionality
   	================================================== -->
 	<script type="text/javascript">
@@ -43,27 +42,6 @@
 	//main document ready function
 	$( document ).ready(function() {
 
-		$.simpleWeather({
-			location: '12123',
-			unit: 'F',
-			success: function (weather) {
-				html = '<h2>&nbsp;&nbsp;' + weather.temp + '&deg;' + weather.units.temp + '</h2><img style="float:left;" width="125px" src="' + weather.image + '">';
-				html += '<ul><li><i style="color:#000" class="icon-' + weather.code + '"></i>' + weather.city + ', ' + weather.region + '</li>';
-				html += '<li class="currently">' + weather.currently + '</li>';
-				html += '</ul>';
-				html += '<table class="table table-striped">';
-				for (var i = 0; i < 5; i++) {			
-					html += '<tr><td><img style="float:left;" width="50px" src="' + weather.forecast[i].image + '"></td><td>' + weather.forecast[i].day + '</td><td>' + weather.forecast[i].low + ' <strong>' + weather.forecast[i].high + '</strong></td></tr>';	
-				}
-				html += '</table>'
-
-				$("#weather").html(html);
-			},
-			error: function (error) {
-				$("#weather").html('<p>' + error + '</p>');
-			}
-		});
-		
 		//listener for graph dropdown menu
 		$('.dropdown-menu li a').on( 'click', function( event ) {
 			var $target = $( event.currentTarget );	
@@ -390,28 +368,17 @@
 	<div class="navbar navbar-default navbar-fixed-top">  
 	  <div class="container">
 		<div class="navbar-header">
-		  <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-			<span class="icon-bar"></span>
-			<span class="icon-bar"></span>
-			<span class="icon-bar"></span>
-		  </button>
 		  <a id="pagetitle" class="navbar-brand" href="#">X-300</a>
 		</div>
-		<div id="navbar" class="navbar-collapse collapse">
-          <ul class="nav navbar-nav navbar-right">
-            <li><a href="#tempPanel">Temps</a></li>
-            <li><a href="#graphPanel">Graph</a></li>
-          </ul>
-        </div><!--/.nav-collapse -->
 	  </div>
 	</div>
 
 	<!-- Primary Page Layout
 	================================================== -->
 	<div class="container">
-		<div id="tempPanel" class="row">
+		<div class="row" style="margin-top:10px;">
 			<div class="col-sm-5">
-				<div style="margin-top:10px;" class="panel panel-default">
+				<div class="panel panel-default">
 					<div class="panel-heading">
 						<h4 class="panel-title">Current Temps<small class="pull-right" style="margin-top:3px;" id="x300Time"></small></h4>
 					</div>
@@ -428,18 +395,7 @@
 					</table>
 				</div>
 			</div>
-			<div class="col-sm-3">
-				<div style="margin-top:10px;" class="panel panel-default">
-					<div class="panel-heading">
-						<h4 class="panel-title">Weather<small class="pull-right" style="margin-top:3px;" id="x300Time"></small></h4>
-					</div>
-	
-					<div id="weather"></div>
-				</div>
-			</div>
-		</div>
-		<div id="graphPanel" class="row">
-			<div class="col-sm-12">
+			<div class="col-sm-7">
 				<div class="panel panel-default">
 				  <div class="panel-heading">
 					<h4 class="panel-title">Graph<small class="pull-right" style="margin-top:3px;" id="graphTime"></small></h4>
@@ -469,8 +425,9 @@
 						</div>	
 					</div>
 					
-					<img id="loader" src="loading.gif" style="display:none" class="ajax-loader"/>
-					<div id="graphdiv" style="width:100%;height:500px;"></div>
+					<div id="graphdiv" style="width:100%;height:500px;">
+						<img id="loader" src="loading.gif" style="display:none" class="ajax-loader"/>
+					</div>
 					<div style="margin:5px;" class="row">
 						<div id="legendDiv"></div>
 					</div>
