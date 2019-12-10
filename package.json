@@ -8,7 +8,7 @@
   "main": "server.js",
   "scripts": {
     "start": "npm run open && npm run server",
-    "server": "node server.js",
+    "server": "node x300-server.js",
     "open": "start http://localhost:8083"
   },
   "dependencies": {
