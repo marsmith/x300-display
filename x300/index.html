@@ -262,7 +262,7 @@
 		$( ".ajax-loader" ).show();
 		
 		//create label array
-		var labelList = ["Log Time","Outside Temp",getCookie("sensor1"),getCookie("sensor2"),getCookie("sensor3"),getCookie("sensor4"),getCookie("sensor5"),getCookie("sensor6"),getCookie("sensor7"),getCookie("sensor8")];
+		var labelList = ["Log Time","Outside Temp",getCookie("sensor1")];
 
 		//get log file cross domain using YQL
 		$.ajax({
@@ -385,13 +385,6 @@
 					<!-- This is the main data table -->  
 					<table class="table table-striped">			
 						<tr><td id="sensor1">Sensor 1</td><td id="sensor1temp" align="center"><i id="stateSpinner" class="fa fa-spinner fa-1x fa-spin"></i></td></tr>
-						<tr><td id="sensor2">Sensor 2</td><td id="sensor2temp" align="center"><i id="stateSpinner" class="fa fa-spinner fa-1x fa-spin"></i></td></tr>
-						<tr><td id="sensor3">Sensor 3</td><td id="sensor3temp" align="center"><i id="stateSpinner" class="fa fa-spinner fa-1x fa-spin"></i></td></tr>
-						<tr><td id="sensor4">Sensor 4</td><td id="sensor4temp" align="center"><i id="stateSpinner" class="fa fa-spinner fa-1x fa-spin"></i></td></tr>
-						<tr><td id="sensor5">Sensor 5</td><td id="sensor5temp" align="center"><i id="stateSpinner" class="fa fa-spinner fa-1x fa-spin"></i></td></tr>
-						<tr><td id="sensor6">Sensor 6</td><td id="sensor6temp" align="center"><i id="stateSpinner" class="fa fa-spinner fa-1x fa-spin"></i></td></tr>
-						<tr><td id="sensor7">Sensor 7</td><td id="sensor7temp" align="center"><i id="stateSpinner" class="fa fa-spinner fa-1x fa-spin"></i></td></tr>
-						<tr><td id="sensor8">Sensor 8</td><td id="sensor8temp" align="center"><i id="stateSpinner" class="fa fa-spinner fa-1x fa-spin"></i></td></tr>
 					</table>
 				</div>
 			</div>
