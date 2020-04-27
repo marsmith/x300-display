@@ -270,6 +270,8 @@
 			url:"/getlog",
 			data: queryValue,
 			success: function(data){
+
+				console.log(data)
 				
 				//make sure mysql gave a good response
 				if(data.length > 0){
@@ -302,7 +304,8 @@
 							}
 						},
 						data: {
-							csv: newData
+							csv: newData,
+							endColumn: 2
 						},
 						plotOptions: {
 							series: {
